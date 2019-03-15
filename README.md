@@ -68,14 +68,12 @@ None, but the following roles are recommended:
 
 ## Example Playbook
 
+    ---
     - hosts: servers
       vars:
         digitalocean_api_token: '1234567890abscdefg'
         digitalocean_projects:
           - name: 'MYPROJECT'
-            purpose: 'Website or blog'
-            description: 'My project'
-            environment: 'Development'
         digitalocean_clusters:
           - name: "my-k8s"
             region: "sfo2"
@@ -87,7 +85,7 @@ None, but the following roles are recommended:
                 count: 3
                 name: "default-pool"
       roles:
-         - { role: socketwench.digitalocean }
+         - socketwench.digitalocean
 
 ## License
 
