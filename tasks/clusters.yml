@@ -1,0 +1,54 @@
+---
+- name: Get cluster options.
+  uri:
+    url: "https://api.digitalocean.com/v2/kubernetes/options"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ digitalocean_api_token }}"
+    return_content: yes
+  register: _cluster_options
+- name: Get a list of cluster sizes and versions from API result
+  set_fact:
+    _cluster_node_sizes: "{{ _cluster_options.json.options.sizes | map(attribute='slug') | list }}"
+    _cluster_versions: "{{ _cluster_options.json.options.versions | map(attribute='slug') | list | sort}}"
+- name: Generate some defaults from the options
+  set_fact:
+    _cluster_node_size: "{{ _cluster_node_sizes | first | default('s-1vcpu-2gb') }}"
+    _cluster_version: "{{ _cluster_versions | last | default('1.13.3-do.0') }}"
+- name: Generate a default node pool if one isn't provided.
+  set_fact:
+    _cluster_node_pools:
+      - size: "{{ _cluster_node_size }}"
+        count: 3
+        name: "default-pool"
+- name: Get a list of clusters
+  uri:
+    url: "https://api.digitalocean.com/v2/kubernetes/clusters"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ digitalocean_api_token }}"
+  register: _cluster_list
+- name: Get a list of cluster names from API result
+  set_fact:
+    _cluster_names: "{{ _cluster_list.json.kubernetes_clusters | map(attribute='name') | list }}"
+- name: Create the cluster
+  uri:
+    url: "https://api.digitalocean.com/v2/kubernetes/clusters"
+    method: POST
+    headers:
+      "Authorization": "Bearer {{ digitalocean_api_token }}"
+    return_content: yes
+    status_code:
+      - 201
+      - 409
+    body_format: json
+    body:
+      name: "{{ item.name }}"
+      region: "{{ item.region }}"
+      version: "{{ item.version | default(_cluster_version) }}"
+      tags: "{{ item.tags | default([]) }}"
+      node_pools: "{{ item.node_pools | default(_cluster_node_pools) }}"
+  register: _cluster_create
+  when:
+    - "item.name not in (_cluster_names | default([]))"
+  loop: "{{ digitalocean_clusters | default([]) }}"

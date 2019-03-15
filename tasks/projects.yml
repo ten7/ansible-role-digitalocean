@@ -1,0 +1,32 @@
+---
+- name: Get a list of projects
+  uri:
+    url: "https://api.digitalocean.com/v2/projects"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ digitalocean_api_token }}"
+  register: _project_list
+- name: Get a list of project names from API result
+  set_fact:
+    _project_names: "{{ _project_names | default([]) }} + {{ [item.name] }}"
+  loop: "{{ _project_list.json.projects | default([]) }}"
+- name: Create projects
+  uri:
+    url: "https://api.digitalocean.com/v2/projects"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ digitalocean_api_token }}"
+    return_content: yes
+    status_code:
+      - 201
+      - 409
+    body_format: json
+    body:
+      name: "{{ item.name }}"
+      purpose: "{{ item.purpose | default(digitalocean_project_purpose) }}"
+      description: "{{ item.description | default('') }}"
+      environment: "{{ item.environment | default('') }}"
+  register: _project_create
+  when:
+    - "item.name not in _project_names"
+  loop: "{{ digitalocean_projects | default([]) }}"

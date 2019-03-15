@@ -1,0 +1,23 @@
+---
+- name: Copy the ingress templates
+  copy:
+    src: "templates/ingress"
+    dest: "{{ _run_temp_dir.path }}/{{ item.name }}/ingress.d/"
+  loop: "{{ _cluster_ids }}"
+- name: Assemble the ingress templates
+  assemble:
+    src: "{{ _run_temp_dir.path }}/{{ item.name }}/ingress.d"
+    dest: "{{ _run_temp_dir.path }}/{{ item.name }}/ingress.yaml.j2"
+    regexp: "\\.yaml$"
+  loop: "{{ _cluster_ids }}"
+- name: Write the definitions yaml
+  template:
+    src: "{{ _run_temp_dir.path }}/{{ item.name }}/ingress.yaml.j2"
+    dest: "{{ _run_temp_dir.path }}/{{ item.name }}/ingress.yaml"
+  loop: "{{ _cluster_ids }}"
+- name: Apply the definitions
+  k8s:
+    state: present
+    src: "{{ _run_temp_dir.path }}/{{ item.name }}/ingress.yaml"
+    kubeconfig: "{{ _run_temp_dir.path }}/{{ item.name }}/kubectl.yaml"
+  loop: "{{ _cluster_ids }}"
