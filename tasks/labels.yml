@@ -1,0 +1,28 @@
+- name: List the node pools
+  uri:
+    url: "https://api.digitalocean.com/v2/kubernetes/clusters/{{ item.id | string }}/node_pools"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ digitalocean_api_token }}"
+    return_content: yes
+    status_code:
+      - 200
+  register: _get_node_pools
+  loop: "{{ _cluster_ids | default([]) }}"
+- name: Apply labels to each node pool
+  shell: >
+    {% for __cluster in digitalocean_clusters | default([]) %}
+    {% for __node_pool in __cluster.node_pools | default([]) %}
+    {% for __label in __node_pool.labels | default([]) %}
+    {% for __pool_result in _get_node_pools.results | default([]) %}
+    {% set __query = 'node_pools[?name==' + "'" + __node_pool.name + "'" + '].nodes[].name' %}
+    {% for __node_name in (__pool_result.json | json_query(__query) | list) %}
+    kubectl
+    --kubeconfig="{{ _run_temp_dir.path }}/{{ __cluster.name }}/kubectl.yaml"
+    label nodes {{ __node_name }} {{ __label.key }}={{ __label.value }} --overwrite &&
+    {% endfor %}
+    {% endfor %}
+    {% endfor %}
+    {% endfor %}
+    {% endfor %}
+    true

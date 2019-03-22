@@ -60,6 +60,26 @@ An array of Kubernetes clusters to create on Digital Ocean, each item representi
 * **tags**: Optional. An array of tags to apply to the cluster.
 * **node_pools**: Optional. The node pools to add to the cluster. If not specified, a default pool of 3 of the smallest node sizes available.
 
+### Kubernetes node labels
+
+This role can also apply k8s labels to a Digital Ocean node pool:
+
+```yaml
+digitalocean_clusters:
+  - name: "my-k8s"
+    region: "sfo2"
+    version: "1.13.2-do.1"
+    tags:
+      - "live"
+    node_pools:
+      - size: "s-1vcpu-2gb"
+        count: 3
+        name: "default-pool"
+        labels:
+          - key: "app"
+            value: "web"
+```
+
 ## Dependencies
 
 None, but the following roles are recommended:

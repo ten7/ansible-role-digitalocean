@@ -5,5 +5,7 @@
   include_tasks: 'clusters.yml'
 - name: Get kubeconfig per cluster
   include_tasks: 'kubeconfig.yml'
+- name: Apply labels by node pool
+  include_tasks: 'labels.yml'
 - name: Create cluster-wide ingress load balancer
   include_tasks: 'ingress.yml'

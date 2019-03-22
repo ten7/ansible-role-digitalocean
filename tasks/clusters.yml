@@ -31,6 +31,18 @@
 - name: Get a list of cluster names from API result
   set_fact:
     _cluster_names: "{{ _cluster_list.json.kubernetes_clusters | map(attribute='name') | list }}"
+- name: Get the cluster IDs given the cluster names
+  set_fact:
+    cluster:
+      id: "{{ _cluster_list.json | json_query(_cluster_query) | first | default('') }}"
+      name: "{{ item.name }}"
+  vars:
+    _cluster_query: "kubernetes_clusters[?name=='{{ item.name }}'].id"
+  loop: "{{ digitalocean_clusters | default([]) }}"
+  register: _cluster_ids_raw
+- name: Normalize the cluster IDs into a list
+  set_fact:
+    _cluster_ids: "{{ _cluster_ids_raw.results | map(attribute='ansible_facts.cluster') | list }}"
 - name: Create the cluster
   uri:
     url: "https://api.digitalocean.com/v2/kubernetes/clusters"
