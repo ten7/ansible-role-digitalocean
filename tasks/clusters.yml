@@ -33,11 +33,9 @@
     _cluster_names: "{{ _cluster_list.json.kubernetes_clusters | map(attribute='name') | list }}"
 - name: Get the cluster IDs given the cluster names
   set_fact:
-    cluster:
-      id: "{{ _cluster_list.json | json_query(_cluster_query) | first | default('') }}"
-      name: "{{ item.name }}"
+    cluster: "{{ _cluster_list.json | json_query(_cluster_query) | first | default('') }}"
   vars:
-    _cluster_query: "kubernetes_clusters[?name=='{{ item.name }}'].id"
+    _cluster_query: "kubernetes_clusters[?name=='{{ item.name }}']"
   loop: "{{ digitalocean_clusters | default([]) }}"
   register: _cluster_ids_raw
 - name: Normalize the cluster IDs into a list

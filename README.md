@@ -37,7 +37,7 @@ An array of Digital Ocean projects to create with the following items:
 * **description**: Optional. The project description.
 * **environment**: Optional. The Digtial Ocean envionment, must be `Produciton`, `Staging`, or `Development`.
 
-### Kubernetes Clusters 
+### Kubernetes Clusters
 
 ```yaml
 digitalocean_clusters:
@@ -47,9 +47,9 @@ digitalocean_clusters:
     tags:
       - "live"
     node_pools:
-      - size: "s-1vcpu-2gb"
+      - name: "default-pool"
+        size: "s-1vcpu-2gb"
         count: 3
-        name: "default-pool"
 ```
 
 An array of Kubernetes clusters to create on Digital Ocean, each item representing a single cluster.
@@ -72,12 +72,54 @@ digitalocean_clusters:
     tags:
       - "live"
     node_pools:
-      - size: "s-1vcpu-2gb"
+      - name: "default-pool"
+        size: "s-1vcpu-2gb"
         count: 3
-        name: "default-pool"
         labels:
           - key: "app"
             value: "web"
+```
+
+### Managing node pools
+
+By default, this role will create new node pools, and update existing node pools as they are described under `digitalocean_clusters.node_pools`. You can also be explicit by specifying the `state` item:
+
+```yaml
+digitalocean_clusters:
+  - name: "my-k8s"
+    region: "sfo2"
+    version: "1.13.2-do.1"
+    tags:
+      - "live"
+    node_pools:
+      - name: "default-pool"
+        state: present
+        size: "s-1vcpu-2gb"
+        count: 3
+        labels:
+          - key: "app"
+            value: "web"
+```
+
+This role will also delete node pools listed with a `state` of `absent`:
+
+```yaml
+digitalocean_clusters:
+  - name: "my-k8s"
+    region: "sfo2"
+    version: "1.13.2-do.1"
+    tags:
+      - "live"
+    node_pools:
+      - name: "default-pool"
+        state: present
+        size: "s-1vcpu-2gb"
+        count: 3
+        labels:
+          - key: "app"
+            value: "web"
+      - name: "ye-olde-pool"
+        state: absent
 ```
 
 ## Dependencies
@@ -101,9 +143,10 @@ None, but the following roles are recommended:
             tags:
               - "live"
             node_pools:
-              - size: "s-1vcpu-2gb"
+              - name: "default-pool"
+                state: present
+                size: "s-1vcpu-2gb"
                 count: 3
-                name: "default-pool"
       roles:
          - socketwench.digitalocean
 

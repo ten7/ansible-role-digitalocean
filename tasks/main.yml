@@ -3,6 +3,8 @@
   include_tasks: 'projects.yml'
 - name: Manage k8s clusters
   include_tasks: 'clusters.yml'
+- name: Manage node pools
+  include_tasks: 'node-pools.yml'
 - name: Get kubeconfig per cluster
   include_tasks: 'kubeconfig.yml'
 - name: Apply labels by node pool

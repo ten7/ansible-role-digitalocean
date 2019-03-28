@@ -1,0 +1,71 @@
+---
+- name: Add node pools
+  uri:
+    url: "https://api.digitalocean.com/v2/kubernetes/clusters/{{ _cluster_id }}/node_pools"
+    method: POST
+    headers:
+      "Authorization": "Bearer {{ digitalocean_api_token }}"
+    return_content: yes
+    status_code:
+      - 201
+      - 422
+    body_format: json
+    body: >
+      {
+        "size": "{{ item.1.size }}",
+        "count": {{ item.1.count | default(1) | int }},
+        "name": "{{ item.1.name | default('default-pool') }}",
+        "tags": {{ item.1.tags | default([]) | to_json }},
+      }
+  vars:
+    _cluster_id: "{{ _cluster_ids | selectattr('name', 'equalto', item.0.name) | map(attribute='id') | first }}"
+  when:
+    - (item.1.state | default('present')) == 'present'
+  with_subelements:
+    - "{{ digitalocean_clusters | default([]) }}"
+    - node_pools
+- name: Update node pools
+  uri:
+    url: "https://api.digitalocean.com/v2/kubernetes/clusters/{{ _cluster_id }}/node_pools/{{ _pool_id }}"
+    method: PUT
+    headers:
+      "Authorization": "Bearer {{ digitalocean_api_token }}"
+    return_content: yes
+    status_code:
+      - 202
+      - 422
+    body_format: json
+    body: >
+      {
+        "size": "{{ item.1.size }}",
+        "count": {{ item.1.count | default(1) | int }},
+        "name": "{{ item.1.name | default('default-pool') }}",
+        "tags": {{ item.1.tags | default([]) | to_json }},
+      }
+  vars:
+    _cluster_id: "{{ _cluster_ids | selectattr('name', 'equalto', item.0.name) | map(attribute='id') | first }}"
+    _pool_id: "{{ _cluster_ids | selectattr('name', 'equalto', item.0.name) | map(attribute='node_pools') | first | selectattr('name', 'equalto', item.1.name) | map(attribute='id') | first }}"
+  when:
+    - (item.1.state | default('present')) == 'present'
+  with_subelements:
+    - "{{ digitalocean_clusters | default([]) }}"
+    - node_pools
+- name: Delete node pools
+  uri:
+    url: "https://api.digitalocean.com/v2/kubernetes/clusters/{{ _cluster_id }}/node_pools/{{ _pool_id }}"
+    method: DELETE
+    headers:
+      "Authorization": "Bearer {{ digitalocean_api_token }}"
+    return_content: yes
+    status_code:
+      - 204
+      - 404
+  vars:
+    _cluster_id: "{{ _cluster_ids | selectattr('name', 'equalto', item.0.name) | map(attribute='id') | first }}"
+    _pool_id: "{{ _cluster_ids | selectattr('name', 'equalto', item.0.name) | map(attribute='node_pools') | first | selectattr('name', 'equalto', item.1.name) | map(attribute='id') | first }}"
+  when:
+    - item.1.state is defined
+    - item.1.state == 'absent'
+  with_subelements:
+    - "{{ digitalocean_clusters | default([]) }}"
+    - node_pools
