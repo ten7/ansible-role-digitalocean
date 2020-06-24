@@ -122,6 +122,28 @@ digitalocean_clusters:
         state: absent
 ```
 
+### Creating droplets
+
+```yaml
+digitalocean_droplets:
+  - name: 'MYDROPLET'
+    size: s-4vcpu-8gb
+    region: tor1
+    image: ubuntu-18-04-x64
+    backups: yes
+    tags:
+      - "live"
+```
+
+An array of Digital Ocean droplets to create with the following items:
+
+* **name**: The human-readable name set for the Droplet instance.
+* **size**: The unique slug identifier for the size of this Droplet.
+* **region**: The slug identifier of the region that the Droplet instance is deployed in.
+* **image**: The slug identifier of the base image used to create the Droplet instance.
+* **backups**: Optional. Whether to enable automated backups.
+* **tags**: Optional. An array of tags to apply to the droplet.
+
 ## Dependencies
 
 None, but the following roles are recommended:

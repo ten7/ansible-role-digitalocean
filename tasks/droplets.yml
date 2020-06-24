@@ -1,0 +1,13 @@
+---
+- name: Create a new droplet
+  digital_ocean_droplet:
+    state: present
+    name: "{{ item.name }}"
+    oauth_token: "{{ digitalocean_api_token }}"
+    size: "{{ item.size }}"
+    region: "{{ item.region }}"
+    image: "{{ item.image }}"
+    backups: "{{ item.backups | default('no')}}"
+    tags: "{{ item.tags | default([]) }}"
+  register: _droplet_create
+  loop: "{{ digitalocean_droplets | default([]) }}"
